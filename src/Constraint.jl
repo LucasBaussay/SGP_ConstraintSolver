@@ -24,3 +24,9 @@ function isFiltrable end
 """
 
 function filtrage end
+
+include("Constraints/AtMostOne.jl")
+include("Constraints/Cardinalite.jl")
+include("Constraints/EmptyNIntersection.jl")
+include("Constraints/Intersection.jl")
+include("Constraints/NUnion.jl")
