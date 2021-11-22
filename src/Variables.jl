@@ -8,8 +8,27 @@ mutable struct Variable
 	cardinalInf::Int
 	cardinalSup::Int
 	
-	linkedConstraint::Vector{Constraint}
+	linkedConstraint::Set{Constraint}
 	
-	isFixed::Bool
+	isFixed::Bool# <=> upperBound == lowerBound
+
+end
+
+function Variable(domain::Vector{Int})
+
+	lb = Vector{Int}()
+	ub = domain[:]
+	
+	cardinalInf = 0
+	cardinalSup = length(domain)
+	
+	linkedConstraint = Set{Constraint}()
+	
+	return Variable(lb,
+					ub,
+					cardinalInf,
+					cardinalSup,
+					linkedConstraint,
+					false)
 
 end

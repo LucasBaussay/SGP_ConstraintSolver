@@ -1,6 +1,6 @@
 """
 
-	X_1 Inter X_2 Inter ... Inter X_n = Ensemble vide
+	X_1 ∩ X_2 ∩ ... ∩ X_n = ∅
 	
 """
 
@@ -8,8 +8,13 @@ struct EmptyNIntersection <: Constraint
 	
 	X::Vector{Variable}
 	
-	filtrage::Function
+	filtrage!::Function
 	
 end
 
 isFiltrable(::EmptyNIntersection) = false
+
+function EmptyNIntersection(X)
+	return EmptyNIntersection(X, 
+								filtrage)
+end

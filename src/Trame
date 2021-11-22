@@ -1,0 +1,14 @@
+Travail à  Faire : 
+
+- Changer la sauvegarde des variables dans la strucuture de donnée Model
+- Algorithme Branch-and :
+	* Le noeud initial : On fait un algo de point fixe standard
+	* Pour chacun des noeud suivant on fait un algo de point fixe stochastique : Pour chaque contrainte réveillée, elle à une probabilité non nulle de ne pas être rajoutée dans la pile
+	* Méthode de Branching : Profondeur
+	* Non-récursif
+	* while notFinished :
+		On fixe quelqu'un;
+		On se souvient du point fixé;
+		On Sauvegarde dans une nouvelle case du vecteur les changements fait par l'algo de point fixe; -> RElou
+		Si le problème est infaisable :
+			on revient en arrière et on	en pick une autre à mettre dans la lowerBound

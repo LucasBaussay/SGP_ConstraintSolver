@@ -1,6 +1,6 @@
 """
 
-	| F | <= 1
+	| F | ≤ 1
 	
 """
 
@@ -8,7 +8,7 @@ struct AtMostOne <: Constraint
 
 	F::Variable
 	
-	filtrage::Function
+	filtrage!::Function
 	
 end
 
