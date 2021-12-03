@@ -1,8 +1,11 @@
 include("Constraint.jl")
 include("Variables.jl")
+include("Solution.jl")
 
-function getFiltrableModel(model::Vector{Constraint})
-	
+include("Model.jl")
+
+function getFiltrableModel(model::Model)
+
 	setOfConstraint = Set{Constraint}()
 
 	for constr in model.constraints
@@ -22,17 +25,20 @@ end
 
 function Arc_Consistency(model::Model, verbose::Bool = false)
 
-	setOfConstraint = getFiltrableModel(model)
+	setOfConstraint = copy(model.constraints)
 	solution = Solution()
-	
-	while setOfConstraint != Set{Constraint}()
-	
+
+	while !isempty(setOfConstraint)
+
 		verbose && println("N° de contraintes : $(length(setOfConstraint))")
-	
+
 		constr = pop!(setOfConstraint)
-		
-		modifiedVariables = constr.filtrage!()
-		union!(setOfConstraint, modifiedVariables.linkedConstraint)
+
+		modifiedVariables = filtrage!(constr)
+		for var in modifiedVariables
+			union!(setOfConstraint, var.linkedConstraint)
+		end
+
 	end
 	#=
 	if modelNotFixed(model)
@@ -42,13 +48,13 @@ function Arc_Consistency(model::Model, verbose::Bool = false)
 	else
 		solution = createSolution(model)
 	end
-	
+
 	return solution
 	=#
 end
 
-function main(model::Model, verbose::Bool = false)
+function main(p::Int = 12, g::Int = 4, w::Int = 1; verbose::Bool = false)
 
-	
+	model = ModelTest(p, g, w)
 
 end

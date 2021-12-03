@@ -1,0 +1,3 @@
+struct Solution
+
+end
