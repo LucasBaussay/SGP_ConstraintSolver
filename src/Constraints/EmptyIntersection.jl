@@ -27,41 +27,45 @@ function EmptyIntersection(model, G, H)
 end
 
 function filtrage!(inter::EmptyIntersection)
+	changeVariable = Vector{Variable}(undef, 3)
+	nbChange = 0
+
 	changeG = Change(inter.G)
 	changeH = Change(inter.H)
 
-	changeVariable = Vector{Variable}(undef, 2)
-	nbChange = 0
-
+	#Set
 	if !inter.G.isFixed
 
 		rem = intersect(inter.G.upperBound, inter.H.lowerBound)
-		for elt in rem
-			push!(changeG.removed, elt)
-		end
 
-		if !isempty(rem)
+		if !(isempty(rem))
 			nbChange += 1
-			changeVariable[nbChange] = inter.G
+			changeVariable[nbChange] = G
 		end
 
-		setdiff!(inter.G.upperBound, inter.H.lowerBound)
+		setdiff!(inter.G.upperBound, rem)
+
+		for elt in rem
+			push!(changeG.removed, rem)
+		end
+
 		inter.G.cardinalSup = min(inter.G.cardinalSup, length(inter.G.upperBound))
 	end
 
 	if !inter.H.isFixed
-
 		rem = intersect(inter.H.upperBound, inter.G.lowerBound)
-		for elt in rem
-			push!(changeH.removed, elt)
-		end
 
-		if !isempty(rem)
+		if !(isempty(rem))
 			nbChange += 1
-			changeVariable[nbChange] = inter.H
+			changeVariable[nbChange] = H
 		end
 
-		setdiff!(inter.H.upperBound, inter.G.lowerBound)
+		setdiff!(inter.H.upperBound, rem)
+
+		for elt in rem
+			push!(changeH.removed, rem)
+		end
+
 		inter.H.cardinalSup = min(inter.H.cardinalSup, length(inter.H.upperBound))
 	end
 
@@ -69,6 +73,6 @@ function filtrage!(inter::EmptyIntersection)
 	@assert inter.G.cardinalInf <= inter.G.cardinalSup "Infeasible Problem : $(inter.G) has a problem"
 	@assert inter.H.cardinalInf <= inter.H.cardinalSup "Infeasible Problem : $(inter.H) has a problem"
 
-	return changeVariable[1:nbChange]
+	return changeVariable[1:nbChange], (changeG, changeH)
 
 end
