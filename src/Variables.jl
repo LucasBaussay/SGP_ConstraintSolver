@@ -14,6 +14,35 @@ mutable struct Variable
 
 end
 
+function isFixed(var::Variable)
+	return (var.cardinalInf == length(var.upperBound) || var.cardinalSup == length(var.lowerBound))
+end
+
+function fix!(var::Variable, change::Change)
+
+	if (var.cardinalInf == length(var.upperBound)
+		add = setdiff(var.upperBound, var.lowerBound)
+		for elt in add
+			push!(change.added, elt)
+		end
+		union!(var.lowerBound, add)
+		var.cardinalSup = var.cardinalInf
+	else
+		rem = setdiff(var.upperBound, var.lowerBound)
+		for elt in rem
+			push!(change.removed, elt)
+		end
+		setdiff!(var.upperBound, rem)
+		var.cardinalInf = var.cardinalSup
+	end
+
+	var.isFixed = true
+	change.fixed = true
+
+
+	var
+end
+
 import Base.show
 function Base.show(io::IO, var::Variable)
 	print(io, var.name)

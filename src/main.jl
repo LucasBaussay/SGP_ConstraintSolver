@@ -67,6 +67,9 @@ function Arc_Consistency(model::Model, verbose::Bool = false)
 	return solution
 	=#
 
+	filter!(var-> !(var.isFixed), model.varsNotFixed)
+
+
 	return dictChanges
 end
 
@@ -76,7 +79,50 @@ function main(p::Int = 12, g::Int = 4, w::Int = 1; verbose::Bool = false)
 
 end
 
+#TODO
+#
+# Je doids gérer le cas d'erreur -> SI on tombre sur une solution non faisable ca fait quoi
+# Faire les fonctions unforced, returnParent, Solution(model)
+
 function branch(model = ModelTest())
+
+	changes = Arc_Consistency(model)
+
+	mini = Inf
+	varToTest = nothing
+	indVar = 1
+
+	nbVarToTest = length(model.varsNotFixed)
+
+	if nbVarToTest > 0
+
+		while indVar <= nbVarToTest && mini > 1
+			var = model.varsNotFixed[indVar]
+			if var.cardinalSup - var.cardinalInf < mini
+				mini = var.cardinalSup - var.cardinalInf
+				varToTest = var
+			end
+		end
+
+		valueToTest = setdiff(varToTest.upperBound, varToTest.lowerBound)
+		nbValueToTest = length(valueToTest)
+		sol = nothing
+		stop = false
+		indValue = 1
+
+		while !stop && indValue <= nbValueToTest
+			value = valueToTest[indValue]
+
+			isFixed = forced!(varToTest, value)
+			sol, stop = branch(model)
+			unforced!(varToTest, value, isFixed)
+
+		end
+		returnParent!(model, changes)
+	else
+		returnParent!(model, changes)
+		return Solution(model), true
+	end
 
 
 

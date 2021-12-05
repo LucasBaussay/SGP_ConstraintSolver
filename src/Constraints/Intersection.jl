@@ -45,7 +45,11 @@ function filtrage!(inter::Intersection)
 
 		if !(isempty(rem) && isempty(add))
 			nbChange += 1
-			changeVariable[nbChange] = F
+			changeVariable[nbChange] = inter.F
+
+			if isFixed(inter.F)
+				fix!(inter.F, changeF)
+			end
 		end
 
 		setdiff!(inter.F.upperBound, rem)
@@ -59,7 +63,7 @@ function filtrage!(inter::Intersection)
 		end
 
 		inter.F.cardinalInf = max(inter.F.cadinalInf, length(inter.F.lowerBound))
-		inter.F.cardinalSup = min(inter.F.cardinalSup, length(inter.F.upperBound))
+		inter.F.cardinalSup = min(inter.F.cardinalSup, length(inter.F.upperBound), inter.G.cardinalSup, inter.H.cardinalSup)
 	end
 
 	if !inter.G.isFixed
@@ -69,7 +73,11 @@ function filtrage!(inter::Intersection)
 
 		if !(isempty(rem) && isempty(add))
 			nbChange += 1
-			changeVariable[nbChange] = G
+			changeVariable[nbChange] = inter.G
+
+			if isFixed(inter.G)
+				fix!(inter.G, changeG)
+			end
 		end
 
 		setdiff!(inter.G.upperBound, rem)
@@ -82,7 +90,7 @@ function filtrage!(inter::Intersection)
 			push!(changeG.removed, rem)
 		end
 
-		inter.G.cardinalInf = max(inter.G.cadinalInf, length(inter.G.lowerBound))
+		inter.G.cardinalInf = max(inter.G.cadinalInf, length(inter.G.lowerBound), inter.F.cardinalInf)
 		inter.G.cardinalSup = min(inter.G.cardinalSup, length(inter.G.upperBound))
 	end
 
@@ -92,7 +100,11 @@ function filtrage!(inter::Intersection)
 
 		if !(isempty(rem) && isempty(add))
 			nbChange += 1
-			changeVariable[nbChange] = H
+			changeVariable[nbChange] = inter.H
+
+			if isFixed(inter.H)
+				fix!(inter.H, changeH)
+			end
 		end
 
 		setdiff!(inter.H.upperBound, rem)
@@ -105,7 +117,7 @@ function filtrage!(inter::Intersection)
 			push!(changeH.removed, rem)
 		end
 
-		inter.H.cardinalInf = max(inter.H.cadinalInf, length(inter.H.lowerBound))
+		inter.H.cardinalInf = max(inter.H.cadinalInf, length(inter.H.lowerBound), inter.F.cardinalInf)
 		inter.H.cardinalSup = min(inter.H.cardinalSup, length(inter.H.upperBound))
 	end
 

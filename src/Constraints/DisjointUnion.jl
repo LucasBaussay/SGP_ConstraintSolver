@@ -45,7 +45,11 @@ function filtrage!(unionConst::DisjointUnion)
 
 		if !(isempty(rem) && isempty(add))
 			nbChange += 1
-			changeVariable[nbChange] = F
+			changeVariable[nbChange] = unionConst.F
+
+			if isFixed(unionConst.F)
+				fix!(unionConst.F, changeF)
+			end
 		end
 
 		setdiff!(unionConst.F.upperBound, rem)
@@ -58,8 +62,8 @@ function filtrage!(unionConst::DisjointUnion)
 			push!(changeF.removed, rem)
 		end
 
-		unionConst.F.cardinalInf = max(unionConst.F.cardinalInf, length(unionConst.F.lowerBound))
-		unionConst.F.cardinalSup = min(unionConst.F.cardinalSup, length(unionConst.F.upperBound))
+		unionConst.F.cardinalInf = max(unionConst.F.cardinalInf, length(unionConst.F.lowerBound), unionConst.G.cardinalInf, unionConst.H.cardinalInf)
+		unionConst.F.cardinalSup = min(unionConst.F.cardinalSup, length(unionConst.F.upperBound), unionConst.G.cardinalSup + unionConst.H.cardinalSup)
 	end
 
 	if !unionConst.G.isFixed
@@ -69,7 +73,11 @@ function filtrage!(unionConst::DisjointUnion)
 
 		if !(isempty(rem) && isempty(add))
 			nbChange += 1
-			changeVariable[nbChange] = G
+			changeVariable[nbChange] = unionConst.G
+
+			if isFixed(unionConst.G)
+				fix!(unionConst.G, changeG)
+			end
 		end
 
 		setdiff!(unionConst.G.upperBound, rem)
@@ -83,7 +91,7 @@ function filtrage!(unionConst::DisjointUnion)
 		end
 
 		unionConst.G.cardinalInf = max(unionConst.G.cardinalInf, length(unionConst.G.lowerBound))
-		unionConst.G.cardinalSup = min(unionConst.G.cardinalSup, length(unionConst.G.upperBound))
+		unionConst.G.cardinalSup = min(unionConst.G.cardinalSup, length(unionConst.G.upperBound), unionConst.F.cardinalSup - unionConst.H.cardinalInf)
 	end
 
 	if !unionConst.H.isFixed
@@ -92,7 +100,11 @@ function filtrage!(unionConst::DisjointUnion)
 
 		if !(isempty(rem) && isempty(add))
 			nbChange += 1
-			changeVariable[nbChange] = H
+			changeVariable[nbChange] = unionConst.H
+
+			if isFixed(unionConst.H)
+				fix!(unionConst.H, changeH)
+			end
 		end
 
 		setdiff!(unionConst.H.upperBound, rem)
@@ -106,7 +118,7 @@ function filtrage!(unionConst::DisjointUnion)
 		end
 
 		unionConst.H.cardinalInf = max(unionConst.H.cardinalInf, length(unionConst.H.lowerBound))
-		unionConst.H.cardinalSup = min(unionConst.H.cardinalSup, length(unionConst.H.upperBound))
+		unionConst.H.cardinalSup = min(unionConst.H.cardinalSup, length(unionConst.H.upperBound), unionConst.F.cardinalSup - unionConst.G.cardinalInf)
 	end
 
 	#Error

@@ -40,7 +40,11 @@ function filtrage!(inter::EmptyIntersection)
 
 		if !(isempty(rem))
 			nbChange += 1
-			changeVariable[nbChange] = G
+			changeVariable[nbChange] = inter.G
+
+			if isFixed(inter.G)
+				fix!(inter.G, changeG)
+			end
 		end
 
 		setdiff!(inter.G.upperBound, rem)
@@ -57,7 +61,11 @@ function filtrage!(inter::EmptyIntersection)
 
 		if !(isempty(rem))
 			nbChange += 1
-			changeVariable[nbChange] = H
+			changeVariable[nbChange] = inter.H
+
+			if isFixed(inter.H)
+				fix!(inter.H, changeH)
+			end
 		end
 
 		setdiff!(inter.H.upperBound, rem)

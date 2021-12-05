@@ -3,6 +3,8 @@ struct Model
 	X::Array{Variable, 2}
 	varsInter::Vector{Variable}
 
+	varsNotFixed::Vector{Variable}
+
 	constraints::Set{Constraint}
 
 	p::Int
