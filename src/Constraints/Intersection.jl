@@ -62,8 +62,14 @@ function filtrage!(inter::Intersection)
 			push!(changeF.removed, rem)
 		end
 
-		inter.F.cardinalInf = max(inter.F.cadinalInf, length(inter.F.lowerBound))
-		inter.F.cardinalSup = min(inter.F.cardinalSup, length(inter.F.upperBound), inter.G.cardinalSup, inter.H.cardinalSup)
+		cardInf = max(inter.F.cadinalInf, length(inter.F.lowerBound))
+		cardSup = min(inter.F.cardinalSup, length(inter.F.upperBound), inter.G.cardinalSup, inter.H.cardinalSup)
+
+		changeF.cardAdded = inter.F.cardinalInf - cardInf
+		changeF.cardRemoved = cardSup - inter.F.cardinalSup
+
+		inter.F.cardinalInf += changeF.cardAdded
+		inter.F.cardinalSup += changeF.cardRemoved
 	end
 
 	if !inter.G.isFixed
@@ -90,8 +96,14 @@ function filtrage!(inter::Intersection)
 			push!(changeG.removed, rem)
 		end
 
-		inter.G.cardinalInf = max(inter.G.cadinalInf, length(inter.G.lowerBound), inter.F.cardinalInf)
-		inter.G.cardinalSup = min(inter.G.cardinalSup, length(inter.G.upperBound))
+		cardInf = max(inter.G.cadinalInf, length(inter.G.lowerBound), inter.F.cardinalInf)
+		cardSup = min(inter.G.cardinalSup, length(inter.G.upperBound))
+
+		changeG.cardAdded = inter.G.cardinalInf - cardInf
+		changeG.cardRemoved = cardSup - inter.G.cardinalSup
+
+		inter.G.cardinalInf += changeG.cardAdded
+		inter.G.cardinalSup += changeG.cardRemoved
 	end
 
 	if !inter.H.isFixed
@@ -117,8 +129,14 @@ function filtrage!(inter::Intersection)
 			push!(changeH.removed, rem)
 		end
 
-		inter.H.cardinalInf = max(inter.H.cadinalInf, length(inter.H.lowerBound), inter.F.cardinalInf)
-		inter.H.cardinalSup = min(inter.H.cardinalSup, length(inter.H.upperBound))
+		cardInf = max(inter.H.cadinalInf, length(inter.H.lowerBound), inter.F.cardinalInf)
+		cardSup = min(inter.H.cardinalSup, length(inter.H.upperBound))
+
+		changeH.cardAdded = inter.H.cardinalInf - cardInf
+		changeH.cardRemoved = cardSup - inter.H.cardinalSup
+
+		inter.H.cardinalInf += changeH.cardAdded
+		inter.H.cardinalSup += changeH.cardRemoved
 	end
 
 	#Error

@@ -20,12 +20,14 @@ end
 
 function fix!(var::Variable, change::Change)
 
-	if (var.cardinalInf == length(var.upperBound)
+	if (var.cardinalInf == length(var.upperBound))
 		add = setdiff(var.upperBound, var.lowerBound)
+
 		for elt in add
 			push!(change.added, elt)
 		end
 		union!(var.lowerBound, add)
+		change.cardRemoved += vars.cardinalInf - var.cardinalSup
 		var.cardinalSup = var.cardinalInf
 	else
 		rem = setdiff(var.upperBound, var.lowerBound)
@@ -33,6 +35,7 @@ function fix!(var::Variable, change::Change)
 			push!(change.removed, elt)
 		end
 		setdiff!(var.upperBound, rem)
+		change.cardAdded += var.cardinalSup - var.cardinalInf
 		var.cardinalInf = var.cardinalSup
 	end
 
@@ -41,6 +44,60 @@ function fix!(var::Variable, change::Change)
 
 
 	var
+end
+
+function forced!(var::Variable, value::Union{Int, Nothing})
+
+	change = Change(var)
+
+	if value == nothing
+		cardSup = var.cardinalInf - var.cardinalSup
+		var.cardinalSup += cardSup
+		change.cardRemoved += cardSup
+
+		rem = setdiff(var.upperBound, var.lowerBound)
+		for elt in rem
+			push!(change.removed, elt)
+		end
+		setdiff!(var.upperBound, rem)
+
+		change.fixed = true
+
+	else
+
+		union!(var.lowerBound, [value])
+		push!(change.added, value)
+		cardInf = max(length(var.lowerBound), var.cardinalInf)
+
+		change.cardAdded += cardInf - var.cardinalInf
+		var.cardinalInf += change.cardAdded
+
+		if isFixed(var)
+			fix!(var, change)
+		end
+	end
+	return change
+end
+
+function unforced!(var::Variable, change::Change)
+
+	if change.fixed
+		var.isFixed = false
+	end
+
+	union!(var.upperBound, change.removed)
+	setdiff!(var.lowerBound, change.added)
+
+	var.cardinalInf -= change.cardAdded
+	var.cardinalSup -= change.cardRemoved
+
+	var
+
+end
+
+
+
+
 end
 
 import Base.show

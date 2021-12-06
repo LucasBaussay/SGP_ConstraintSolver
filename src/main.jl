@@ -86,7 +86,11 @@ end
 
 function branch(model = ModelTest())
 
-	changes = Arc_Consistency(model)
+	try
+		changes = Arc_Consistency(model)
+	catch y
+		return nothing, false
+	end
 
 	mini = Inf
 	varToTest = nothing
@@ -104,7 +108,7 @@ function branch(model = ModelTest())
 			end
 		end
 
-		valueToTest = setdiff(varToTest.upperBound, varToTest.lowerBound)
+		valueToTest = union(setdiff(varToTest.upperBound, varToTest.lowerBound), [nothing])
 		nbValueToTest = length(valueToTest)
 		sol = nothing
 		stop = false
@@ -113,14 +117,17 @@ function branch(model = ModelTest())
 		while !stop && indValue <= nbValueToTest
 			value = valueToTest[indValue]
 
-			isFixed = forced!(varToTest, value)
-			sol, stop = branch(model)
-			unforced!(varToTest, value, isFixed)
-
+			if value != nothing || varToTest.cardinalInf == length(var.lowerBound)
+				if value == nothing || value in varToTest.upperBound
+					changeForce = forced!(varToTest, value)
+					sol, stop = branch(model)
+					unforced!(varToTest, changeForce)
+				end
+			end
 		end
-		returnParent!(model, changes)
+		returnParent!(changes)
 	else
-		returnParent!(model, changes)
+		returnParent!(changes)
 		return Solution(model), true
 	end
 

@@ -53,7 +53,11 @@ function filtrage!(inter::EmptyIntersection)
 			push!(changeG.removed, rem)
 		end
 
-		inter.G.cardinalSup = min(inter.G.cardinalSup, length(inter.G.upperBound))
+		cardSup = min(inter.G.cardinalSup, length(inter.G.upperBound))
+
+		changeG.cardRemoved = cardSup - inter.G.cardinalSup
+
+		inter.G.cardinalSup += changeG.cardRemoved
 	end
 
 	if !inter.H.isFixed
@@ -74,7 +78,11 @@ function filtrage!(inter::EmptyIntersection)
 			push!(changeH.removed, rem)
 		end
 
-		inter.H.cardinalSup = min(inter.H.cardinalSup, length(inter.H.upperBound))
+		cardSup = min(inter.H.cardinalSup, length(inter.H.upperBound))
+
+		changeH.cardRemoved = cardSup - inter.H.cardinalSup
+
+		inter.H.cardinalSup += changeH.cardRemoved
 	end
 
 	#Error

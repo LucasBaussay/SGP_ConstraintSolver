@@ -62,8 +62,14 @@ function filtrage!(unionConst::DisjointUnion)
 			push!(changeF.removed, rem)
 		end
 
-		unionConst.F.cardinalInf = max(unionConst.F.cardinalInf, length(unionConst.F.lowerBound), unionConst.G.cardinalInf, unionConst.H.cardinalInf)
-		unionConst.F.cardinalSup = min(unionConst.F.cardinalSup, length(unionConst.F.upperBound), unionConst.G.cardinalSup + unionConst.H.cardinalSup)
+		cardInf = max(unionConst.F.cardinalInf, length(unionConst.F.lowerBound), unionConst.G.cardinalInf, unionConst.H.cardinalInf)
+		cardSup = min(unionConst.F.cardinalSup, length(unionConst.F.upperBound), unionConst.G.cardinalSup + unionConst.H.cardinalSup)
+
+		changeF.cardAdded = unionConst.F.cardinalInf - cardInf
+		changeF.cardRemoved = cardSup - unionConst.F.cardinalSup
+
+		unionConst.F.cardinalInf += changeF.cardAdded
+		unionConst.F.cardinalSup += changeF.cardRemoved
 	end
 
 	if !unionConst.G.isFixed
@@ -90,8 +96,14 @@ function filtrage!(unionConst::DisjointUnion)
 			push!(changeG.removed, rem)
 		end
 
-		unionConst.G.cardinalInf = max(unionConst.G.cardinalInf, length(unionConst.G.lowerBound))
-		unionConst.G.cardinalSup = min(unionConst.G.cardinalSup, length(unionConst.G.upperBound), unionConst.F.cardinalSup - unionConst.H.cardinalInf)
+		cardInf = max(unionConst.G.cardinalInf, length(unionConst.G.lowerBound))
+		cardSup = min(unionConst.G.cardinalSup, length(unionConst.G.upperBound), unionConst.F.cardinalSup - unionConst.H.cardinalInf)
+
+		changeG.cardAdded = unionConst.G.cardinalInf - cardInf
+		changeG.cardRemoved = cardSup - unionConst.G.cardinalSup
+
+		unionConst.G.cardinalInf += changeG.cardAdded
+		unionConst.G.cardinalSup += changeG.cardRemoved
 	end
 
 	if !unionConst.H.isFixed
@@ -117,8 +129,14 @@ function filtrage!(unionConst::DisjointUnion)
 			push!(changeH.removed, rem)
 		end
 
-		unionConst.H.cardinalInf = max(unionConst.H.cardinalInf, length(unionConst.H.lowerBound))
-		unionConst.H.cardinalSup = min(unionConst.H.cardinalSup, length(unionConst.H.upperBound), unionConst.F.cardinalSup - unionConst.G.cardinalInf)
+		cardInf = max(unionConst.H.cardinalInf, length(unionConst.H.lowerBound))
+		cardSup = min(unionConst.H.cardinalSup, length(unionConst.H.upperBound), unionConst.F.cardinalSup - unionConst.G.cardinalInf)
+
+		changeH.cardAdded = unionConst.H.cardinalInf - cardInf
+		changeH.cardRemoved = cardSup - unionConst.H.cardinalSup
+
+		unionConst.H.cardinalInf += changeH.cardAdded
+		unionConst.H.cardinalSup += changeH.cardRemoved
 	end
 
 	#Error
