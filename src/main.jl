@@ -28,7 +28,6 @@ end
 function Arc_Consistency(model::Model, verbose::Bool = false)
 
 	setOfConstraint = copy(model.constraints)
-	solution = Solution()
 	dictChanges = Dict{Variable, Change}(var => Change(var) for var in model.varsInter)
 
 	for g in 1:model.g
@@ -84,11 +83,12 @@ end
 # Je doids gérer le cas d'erreur -> SI on tombre sur une solution non faisable ca fait quoi
 # Faire les fonctions unforced, returnParent, Solution(model)
 
-function branch(model = ModelTest())
-
+function branch(model = ModelTest(); nbAppel::Int = 1)
+	println("Profondeur : $nbAppel")
 	try
 		changes = Arc_Consistency(model)
 	catch y
+		println("Infeasible")
 		return nothing, false
 	end
 
@@ -117,10 +117,10 @@ function branch(model = ModelTest())
 		while !stop && indValue <= nbValueToTest
 			value = valueToTest[indValue]
 
-			if value != nothing || varToTest.cardinalInf == length(var.lowerBound)
+			if value != nothing || varToTest.cardinalInf == length(varToTest.lowerBound)
 				if value == nothing || value in varToTest.upperBound
 					changeForce = forced!(varToTest, value)
-					sol, stop = branch(model)
+					sol, stop = branch(model, nbAppel = nbAppel + 1)
 					unforced!(varToTest, changeForce)
 				end
 			end

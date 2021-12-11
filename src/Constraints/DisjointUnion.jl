@@ -30,6 +30,10 @@ end
 
 function filtrage!(unionConst::DisjointUnion)
 
+	@assert isempty(intersect(unionConst.G.lowerBound, unionConst.H.lowerBound)) "Infeasible"
+	@assert isempty(setdiff(union(unionConst.G.lowerBound, unionConst.H.lowerBound), unionConst.F.upperBound)) "Infeasible"
+	@assert isempty(setdiff(unionConst.F.lowerBound, union(unionConst.G.upperBound, unionConst.H.upperBound))) "Infeasible"
+
 	changeVariable = Vector{Variable}(undef, 3)
 	nbChange = 0
 

@@ -27,6 +27,7 @@ function filtrage! end
 
 include("Variables.jl")
 include("Model.jl")
+include("Change.jl")
 #include("Constraints/AtMostOne.jl")
 include("Constraints/Cardinalite.jl")
 #include("Constraints/EmptyNIntersection.jl")

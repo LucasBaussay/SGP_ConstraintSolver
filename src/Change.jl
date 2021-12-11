@@ -1,6 +1,6 @@
 mutable struct Change
 
-    var::Variable
+    var
     added::Set{Int}
     removed::Set{Int}
 
@@ -9,7 +9,7 @@ mutable struct Change
     cardRemoved::Int
 end
 
-function Change(var::Variable)
+function Change(var)
 
     return Change(var,
                     Set{Int}(),

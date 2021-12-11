@@ -27,6 +27,9 @@ function EmptyIntersection(model, G, H)
 end
 
 function filtrage!(inter::EmptyIntersection)
+
+	@assert isempty(intersect(inter.H.lowerBound, inter.G.lowerBound)) "Infeasible"
+
 	changeVariable = Vector{Variable}(undef, 3)
 	nbChange = 0
 

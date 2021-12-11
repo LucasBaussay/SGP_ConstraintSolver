@@ -13,6 +13,16 @@ struct Model
 
 end
 
+function Model(X::Array{Variable, 2}, varsInter::Vector{Variable}, constraints::Set{Constraint}, p::Int, g::Int, w::Int)
+	return Model(X,
+				varsInter,
+				append!([X[g, w] for g in 1:g for w in 1:w], varsInter),
+				constraints,
+				p,
+				g,
+				w)
+end
+
 import Base.show
 function Base.show(io::IO, model::Model)
 

@@ -30,6 +30,9 @@ end
 
 function filtrage!(inter::Intersection)
 
+	@assert isempty(setdiff(intersect(inter.G.lowerBound, inter.H.lowerBound), inter.F.upperBound)) "Infeasible"
+	@assert isempty(setdiff(inter.F.lowerBound, intersect(inter.G.upperBound, inter.H.upperBound))) "Infeasible"
+
 	changeVariable = Vector{Variable}(undef, 3)
 	nbChange = 0
 

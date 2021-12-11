@@ -1,3 +1,5 @@
+include("Change.jl")
+
 mutable struct Variable
 
 	name::String
@@ -92,11 +94,6 @@ function unforced!(var::Variable, change::Change)
 	var.cardinalSup -= change.cardRemoved
 
 	var
-
-end
-
-
-
 
 end
 
