@@ -5,45 +5,113 @@ struct SortWeeks <: Constraint
     LeftGroup::Variable
     RightGroup::Variable
 
-    filtrage!::Function
-
 end
 
 isFiltrable(::SortWeeks) = false
 
-function filtrageWeeks!(LeftGroup, RightGroup)
+function SortWeeks(model, LeftGroup, RightGroup)
+    constraint = SortWeeks(LeftGroup, RightGroup)
+
+    push!(LeftGroup.linkedConstraint, constraint)
+    push!(RightGroup.linkedConstraint, constraint)
+
+    push!(model.constraint, constraint)
+end
+
+function filtrageWeeks!(weeks::SortWeeks)
+
+    changeVariable = Vector{Variable}(undef,3)
+    nbChange = 0
+
+    changeLeft = Change(weeks.LeftGroup)
+    changeRight = Change(weeks.RightGroup)
+
     #### filtering LeftGroup
 
-    # v : element max de RightGroup.lowerBound
-    v = maximum(RightGroup.lowerBound)
+    if !weeks.LeftGroup.isFixed
+        # v : element max de RightGroup.upperBound
+        v = maximum(weeks.RightGroup.upperBound)
 
-    c = 0
-    n_UB = copy(LeftGroup.upperBound)
-    
-    for e in 1:length(LeftGroup.upperBound)
-        if LeftGroup.upperBound[e] >= v
-            deleteat!(n_UB, e-c)
-            c += 1
+        c = 0
+        n_UB = copy(weeks.LeftGroup.upperBound)
+        changed = false
+
+        for e in 1:length(weeks.LeftGroup.upperBound)
+            if weeks.LeftGroup.upperBound[e] >= v
+                deleteat!(n_UB, e-c)
+                c += 1
+
+                push!(changeLeft.removed, weeks.LeftGroup.upperBound[e])
+                changed = true
+            end
         end
+
+        if changed
+            nbChange += 1
+            changeVariable[nbChange] = weeks.LeftGroup
+        end
+
+        weeks.LeftGroup.upperBound = n_UB
+
+        cardSup = min(weeks.LeftGroup.cardinalSup, length(weeks.LeftGroup.upperBound))
+        changeLeft.cardRemoved = cardSup - weeks.LeftGroup.cardinalSup
+
+        weeks.LeftGroup.cardinalSup += changeLeft.cardRemoved
     end
 
-    LeftGroup.upperBound = n_UB
-
-    ####
+    ##########################################################################################
 
     #### filtering RightGroup
 
+    v = maximum(weeks.LeftGroup.lowerBound)
+    w = maximum(weeks.RightGroup.lowerBound)
 
-    ####
+    if !weeks.RightGroup.isFixed && weeks.RightGroup.cardinalSup - length(weeks.RightGroup.lowerBound) == 1 && v > w
 
-    @assert LeftGroup.cardinalInf <= LeftGroup.cardinalSup "Infeasible Problem : $LeftGroup has a problem"
-	@assert RightGroup.cardinalInf <= RightGroup.cardinalSup "Infeasible Problem : $RightGroup has a problem"
+        c = 0
+        n_UB = copy(weeks.RightGroup.upperBound)
+        changed = false
+        for e in 1:length(weeks.RightGroup.upperBound)
+            if weeks.RightGroup.upperBound[e] < v && !(weeks.RightGroup.upperBound[e] in weeks.RightGroup.lowerBound)
+                deleteat!(n_UB, e-c)
+                c += 1
+
+                push!(changeRight.removed, weeks.RightGroup.upperBound[e])
+                changed = true
+            end
+        end
+
+        if changed
+            nbChange += 1
+            changeVariable[nbChange] = weeks.RightGroup
+        end
+
+        weeks.RightGroup.upperBound = n_UB
+
+        cardSup = min(weeks.RightGroup.cardinalSup, length(weeks.RightGroup.upperBound))
+        changeRight.cardRemoved = cardSup - weeks.RightGroup.cardinalSup
+
+        weeks.RightGroup.cardinalSup += changeRight.cardRemoved
+    end
+
+
+    ###################################################################################################
+
+    @assert weeks.LeftGroup.cardinalInf <= weeks.LeftGroup.cardinalSup "Infeasible Problem : $LeftGroup has a problem"
+	@assert weeks.RightGroup.cardinalInf <= weeks.RightGroup.cardinalSup "Infeasible Problem : $RightGroup has a problem"
+
+    return changeVariable[1:nbChange], (changeLeft, changeRight)
 end
 
 function quoi()
-    v1 = Variable("v1", [1,4,8], [1,4,6,8,9,12], 4, 4, Set([]), false)
-    v2 = Variable("v2", [1,7,10], [1,5,7,8,10,12,14], 4, 4, Set([]), false)
+    v1 = Variable("v1", [1,12], [1,3,4,6,10,12,14], 4, 4, Set([]), false)
+    v2 = Variable("v2", [1,5,10], [1,5,9,10,11,13,16], 4, 4, Set([]), false)
     println(v1.upperBound)
-    filtrageWeeks!(v1,v2)
+    println(v2.upperBound)
+    model = ModelTest()
+    sg = SortWeeks(v1,v2)
+    println(sg)
+    filtrageWeeks!(sg)
     println(v1.upperBound)
+    println(v2.upperBound)
 end
