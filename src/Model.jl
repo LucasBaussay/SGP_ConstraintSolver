@@ -57,6 +57,7 @@ function Base.show(io::IO, model::Model)
 					w = 1
 					g += 1
 				end
+				ind += 1
 			end
 		end
 		println(io, "      ", "...")
@@ -82,10 +83,10 @@ end
 
 #dict{Variable, Set{Constraint}}
 
-function returnParent!(changes::Dict{Variable, Change})
+function returnParent!(changes::Dict{Variable, Change}, model::Model)
 
 	for var in keys(changes)
-		unforced!(var, changes[var])
+		unforced!(var, changes[var], model)
 	end
 	nothing
 end

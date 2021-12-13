@@ -30,9 +30,9 @@ end
 
 function filtrage!(unionConst::DisjointUnion)
 
-	@assert isempty(intersect(unionConst.G.lowerBound, unionConst.H.lowerBound)) "Infeasible"
-	@assert isempty(setdiff(union(unionConst.G.lowerBound, unionConst.H.lowerBound), unionConst.F.upperBound)) "Infeasible"
-	@assert isempty(setdiff(unionConst.F.lowerBound, union(unionConst.G.upperBound, unionConst.H.upperBound))) "Infeasible"
+	stop =  !(isempty(intersect(unionConst.G.lowerBound, unionConst.H.lowerBound)))
+	stop = stop || !(isempty(setdiff(union(unionConst.G.lowerBound, unionConst.H.lowerBound), unionConst.F.upperBound)))
+	stop = stop || !(isempty(setdiff(unionConst.F.lowerBound, union(unionConst.G.upperBound, unionConst.H.upperBound))))
 
 	changeVariable = Vector{Variable}(undef, 3)
 	nbChange = 0
@@ -41,113 +41,128 @@ function filtrage!(unionConst::DisjointUnion)
 	changeG = Change(unionConst.G)
 	changeH = Change(unionConst.H)
 
-	#Set
-	if !unionConst.F.isFixed
+	if stop
+		return [], (changeF, changeG, changeH), true
+	else
 
-		rem = setdiff(unionConst.F.upperBound, union(unionConst.G.upperBound, unionConst.H.upperBound))
-		add = setdiff(union(unionConst.G.lowerBound, unionConst.H.lowerBound), unionConst.F.lowerBound)
+		#Set
+		if !unionConst.F.isFixed
 
-		if !(isempty(rem) && isempty(add))
-			nbChange += 1
-			changeVariable[nbChange] = unionConst.F
+			rem = setdiff(unionConst.F.upperBound, union(unionConst.G.upperBound, unionConst.H.upperBound))
+			add = setdiff(union(unionConst.G.lowerBound, unionConst.H.lowerBound), unionConst.F.lowerBound)
 
-			if isFixed(unionConst.F)
-				fix!(unionConst.F, changeF)
+			setdiff!(unionConst.F.upperBound, rem)
+			union!(unionConst.F.lowerBound, add)
+
+			cardInf = max(unionConst.F.cardinalInf, length(unionConst.F.lowerBound), unionConst.G.cardinalInf, unionConst.H.cardinalInf)
+			cardSup = min(unionConst.F.cardinalSup, length(unionConst.F.upperBound), unionConst.G.cardinalSup + unionConst.H.cardinalSup)
+
+			changeF.cardAdded = cardInf - unionConst.F.cardinalInf
+			changeF.cardRemoved = cardSup - unionConst.F.cardinalSup
+
+			unionConst.F.cardinalInf += changeF.cardAdded
+			unionConst.F.cardinalSup += changeF.cardRemoved
+
+			if !(isempty(rem) && isempty(add))
+				nbChange += 1
+				changeVariable[nbChange] = unionConst.F
+
+				if isFixed(unionConst.F)
+					fix!(unionConst.F, changeF)
+				end
+			end
+
+			for elt in add
+				push!(changeF.added, elt)
+			end
+			for elt in rem
+				push!(changeF.removed, elt)
 			end
 		end
 
-		setdiff!(unionConst.F.upperBound, rem)
-		union!(unionConst.F.lowerBound, add)
+		if !unionConst.G.isFixed
 
-		for elt in add
-			push!(changeF.added, added)
-		end
-		for elt in rem
-			push!(changeF.removed, rem)
-		end
+			rem = intersect(unionConst.G.upperBound, unionConst.F.lowerBound, unionConst.H.lowerBound)
+			add = setdiff(setdiff(unionConst.F.lowerBound, unionConst.H.upperBound), unionConst.G.lowerBound)
 
-		cardInf = max(unionConst.F.cardinalInf, length(unionConst.F.lowerBound), unionConst.G.cardinalInf, unionConst.H.cardinalInf)
-		cardSup = min(unionConst.F.cardinalSup, length(unionConst.F.upperBound), unionConst.G.cardinalSup + unionConst.H.cardinalSup)
+			setdiff!(unionConst.G.upperBound, rem)
+			union!(unionConst.G.lowerBound, add)
 
-		changeF.cardAdded = unionConst.F.cardinalInf - cardInf
-		changeF.cardRemoved = cardSup - unionConst.F.cardinalSup
+			cardInf = max(unionConst.G.cardinalInf, length(unionConst.G.lowerBound))
+			cardSup = min(unionConst.G.cardinalSup, length(unionConst.G.upperBound), unionConst.F.cardinalSup - unionConst.H.cardinalInf)
 
-		unionConst.F.cardinalInf += changeF.cardAdded
-		unionConst.F.cardinalSup += changeF.cardRemoved
-	end
+			changeG.cardAdded = cardInf - unionConst.G.cardinalInf
+			changeG.cardRemoved = cardSup - unionConst.G.cardinalSup
 
-	if !unionConst.G.isFixed
+			unionConst.G.cardinalInf += changeG.cardAdded
+			unionConst.G.cardinalSup += changeG.cardRemoved
 
-		rem = intersect(unionConst.G.upperBound, unionConst.F.lowerBound, unionConst.H.lowerBound)
-		add = setdiff(setdiff(unionConst.F.lowerBound, unionConst.H.upperBound), unionConst.G.lowerBound)
+			if !(isempty(rem) && isempty(add))
+				nbChange += 1
+				changeVariable[nbChange] = unionConst.G
 
-		if !(isempty(rem) && isempty(add))
-			nbChange += 1
-			changeVariable[nbChange] = unionConst.G
+				if isFixed(unionConst.G)
+					fix!(unionConst.G, changeG)
+				end
+			end
 
-			if isFixed(unionConst.G)
-				fix!(unionConst.G, changeG)
+			for elt in add
+				push!(changeG.added, elt)
+			end
+			for elt in rem
+				push!(changeG.removed, elt)
 			end
 		end
 
-		setdiff!(unionConst.G.upperBound, rem)
-		union!(unionConst.G.lowerBound, add)
+		if !unionConst.H.isFixed
+			rem = intersect(unionConst.H.upperBound, unionConst.F.lowerBound, unionConst.G.lowerBound)
+			add = setdiff(setdiff(unionConst.F.lowerBound, unionConst.G.upperBound), unionConst.H.lowerBound)
 
-		for elt in add
-			push!(changeG.added, added)
-		end
-		for elt in rem
-			push!(changeG.removed, rem)
-		end
+			setdiff!(unionConst.H.upperBound, rem)
+			union!(unionConst.H.lowerBound, add)
 
-		cardInf = max(unionConst.G.cardinalInf, length(unionConst.G.lowerBound))
-		cardSup = min(unionConst.G.cardinalSup, length(unionConst.G.upperBound), unionConst.F.cardinalSup - unionConst.H.cardinalInf)
+			cardInf = max(unionConst.H.cardinalInf, length(unionConst.H.lowerBound))
+			cardSup = min(unionConst.H.cardinalSup, length(unionConst.H.upperBound), unionConst.F.cardinalSup - unionConst.G.cardinalInf)
 
-		changeG.cardAdded = unionConst.G.cardinalInf - cardInf
-		changeG.cardRemoved = cardSup - unionConst.G.cardinalSup
+			changeH.cardAdded = cardInf - unionConst.H.cardinalInf
+			changeH.cardRemoved = cardSup - unionConst.H.cardinalSup
 
-		unionConst.G.cardinalInf += changeG.cardAdded
-		unionConst.G.cardinalSup += changeG.cardRemoved
-	end
+			unionConst.H.cardinalInf += changeH.cardAdded
+			unionConst.H.cardinalSup += changeH.cardRemoved
 
-	if !unionConst.H.isFixed
-		rem = intersect(unionConst.H.upperBound, unionConst.F.lowerBound, unionConst.G.lowerBound)
-		add = setdiff(setdiff(unionConst.F.lowerBound, unionConst.G.upperBound), unionConst.H.lowerBound)
+			if !(isempty(rem) && isempty(add))
+				nbChange += 1
+				changeVariable[nbChange] = unionConst.H
 
-		if !(isempty(rem) && isempty(add))
-			nbChange += 1
-			changeVariable[nbChange] = unionConst.H
+				if isFixed(unionConst.H)
+					fix!(unionConst.H, changeH)
+				end
+			end
 
-			if isFixed(unionConst.H)
-				fix!(unionConst.H, changeH)
+			for elt in add
+				push!(changeH.added, elt)
+			end
+			for elt in rem
+				push!(changeH.removed, elt)
 			end
 		end
 
-		setdiff!(unionConst.H.upperBound, rem)
-		union!(unionConst.H.lowerBound, add)
+		#Error
+		stop = stop || !(unionConst.F.cardinalInf <= unionConst.F.cardinalSup)
+		stop = stop || !(unionConst.G.cardinalInf <= unionConst.G.cardinalSup)
+		stop = stop || !(unionConst.H.cardinalInf <= unionConst.H.cardinalSup)
 
-		for elt in add
-			push!(changeH.added, added)
+		changes = (changeF, changeG, changeH)
+		for c in changes
+			if !(isempty(c.added))
+				println("$unionConst ajoute $(c.added) à $(c.var)")
+			end
+			if !(isempty(c.removed))
+				println("$unionConst enlève $(c.removed) à $(c.var)")
+			end
 		end
-		for elt in rem
-			push!(changeH.removed, rem)
-		end
 
-		cardInf = max(unionConst.H.cardinalInf, length(unionConst.H.lowerBound))
-		cardSup = min(unionConst.H.cardinalSup, length(unionConst.H.upperBound), unionConst.F.cardinalSup - unionConst.G.cardinalInf)
-
-		changeH.cardAdded = unionConst.H.cardinalInf - cardInf
-		changeH.cardRemoved = cardSup - unionConst.H.cardinalSup
-
-		unionConst.H.cardinalInf += changeH.cardAdded
-		unionConst.H.cardinalSup += changeH.cardRemoved
+		return changeVariable[1:nbChange], (changeF, changeG, changeH), stop
 	end
-
-	#Error
-	@assert unionConst.F.cardinalInf <= unionConst.F.cardinalSup "Infeasible Problem : $(unionConst.F) has a problem"
-	@assert unionConst.G.cardinalInf <= unionConst.G.cardinalSup "Infeasible Problem : $(unionConst.G) has a problem"
-	@assert unionConst.H.cardinalInf <= unionConst.H.cardinalSup "Infeasible Problem : $(unionConst.H) has a problem"
-
-	return changeVariable[1:nbChange], (changeF, changeG, changeH)
 
 end

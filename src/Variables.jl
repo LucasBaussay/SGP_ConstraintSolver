@@ -29,7 +29,7 @@ function fix!(var::Variable, change::Change)
 			push!(change.added, elt)
 		end
 		union!(var.lowerBound, add)
-		change.cardRemoved += vars.cardinalInf - var.cardinalSup
+		change.cardRemoved += var.cardinalInf - var.cardinalSup
 		var.cardinalSup = var.cardinalInf
 	else
 		rem = setdiff(var.upperBound, var.lowerBound)
@@ -41,6 +41,8 @@ function fix!(var::Variable, change::Change)
 		var.cardinalInf = var.cardinalSup
 	end
 
+	println("On fixe $var")
+
 	var.isFixed = true
 	change.fixed = true
 
@@ -48,7 +50,9 @@ function fix!(var::Variable, change::Change)
 	var
 end
 
-function forced!(var::Variable, value::Union{Int, Nothing})
+function forced!(var::Variable, value::Union{Int, Nothing}, model)
+
+	@assert var.isFixed == false "Aled"
 
 	change = Change(var)
 
@@ -64,6 +68,8 @@ function forced!(var::Variable, value::Union{Int, Nothing})
 		setdiff!(var.upperBound, rem)
 
 		change.fixed = true
+		var.isFixed = true
+		filter!(var-> !(var.isFixed), model.varsNotFixed)
 
 	else
 
@@ -76,15 +82,17 @@ function forced!(var::Variable, value::Union{Int, Nothing})
 
 		if isFixed(var)
 			fix!(var, change)
+			filter!(var-> !(var.isFixed), model.varsNotFixed)
 		end
 	end
 	return change
 end
 
-function unforced!(var::Variable, change::Change)
+function unforced!(var::Variable, change::Change, model)
 
 	if change.fixed
 		var.isFixed = false
+		union!(model.varsNotFixed, [var])
 	end
 
 	union!(var.upperBound, change.removed)
@@ -105,6 +113,7 @@ end
 function Variable(model, domain, name::String = "X")
 	var = Variable(domain, name)
 	push!(model.varsInter, var)
+	push!(model.varsNotFixed, var)
 
 	var
 end
