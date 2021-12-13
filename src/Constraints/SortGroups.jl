@@ -5,49 +5,112 @@ struct SortGroups <: Constraint
     UpGroup::Variable
     DownGroup::Variable
 
-    filtrage!::Function
-
 end
 
 isFiltrable(::SortGroups) = false
 
-function filtrageGroups!(UpGroup, DownGroup)
+function SortGroups(model, UpGroup, DownGroup)
+    constraint = SortGroups(UpGroup, DownGroup)
+
+    push!(UpGroup.linkedConstraint, constraint)
+    push!(DownGroup.linkedConstraint, constraint)
+
+    push!(model.constraints, constraint)
+end
+
+function filtrageGroups!(groups::SortGroups)
+
+    changeVariable = Vector{Variable}(undef, 3)
+    nbChange = 0
+
+    changeUp = Change(groups.UpGroup)
+    changeDown = Change(groups.DownGroup)
 
     #### filtering DownGroup
 
-    # v : minimum element of UpGroup.upperBound
-    v = minimum(UpGroup.upperBound)
-    # si ordonné, v = UpGroup.upperBound[1]
+    if !groups.DownGroup.isFixed
+        # v : minimum element of UpGroup.upperBound
+        v = minimum(groups.UpGroup.upperBound)
 
-    c = 0
-    n_UB = copy(DownGroup.upperBound)
+        c = 0
+        n_UB = copy(groups.DownGroup.upperBound) # new Upper Bound
 
-    for e in 1:length(DownGroup.upperBound)
-        if DownGroup.upperBound[e] <= v
-            deleteat!(n_UB, e-c)
-            c += 1
+        changed = false
+        for e in 1:length(groups.DownGroup.upperBound)
+            if groups.DownGroup.upperBound[e] <= v # élément plus petit que le plus petit élément possible d'un groupe au dessus => ne peut pas être placé
+                deleteat!(n_UB, e-c)
+                c += 1
+
+                push!(changeDown.removed, groups.DownGroup.upperBound[e])
+                changed = true
+            end
         end
+
+        if changed
+            nbChange += 1
+            changeVariable[nbChange] = groups.DownGroup
+        end
+
+        groups.DownGroup.upperBound = n_UB
+
+        cardSup = min(groups.DownGroup.cardinalSup, length(groups.DownGroup.upperBound))
+        changeDown.cardRemoved = cardSup - groups.DownGroup.cardinalSup
+
+        groups.DownGroup.cardinalSup += changeDown.cardRemoved
     end
 
-    DownGroup.upperBound = n_UB
-
-    #DownGroup.cardinalSup -= c
-
-    ####
+    ####################################################################################
 
     #### filtering UpGroup
 
+    v = minimum(groups.DownGroup.lowerBound)
+    w = minimum(groups.UpGroup.lowerBound)
 
-    ####
+    if !groups.UpGroup.isFixed && groups.UpGroup.cardinalSup - length(groups.UpGroup.lowerBound) == 1 && v < w # il ne reste plus qu'un élément à placer
 
-    @assert UpGroup.cardinalInf <= UpGroup.cardinalSup "Infeasible Problem : $UpGroup has a problem"
-	@assert DownGroup.cardinalInf <= DownGroup.cardinalSup "Infeasible Problem : $DownGroup has a problem"
+        c = 0
+        n_UB = copy(groups.UpGroup.upperBound)
+        changed = false
+        for e in 1:length(groups.UpGroup.upperBound)
+            if groups.UpGroup.upperBound[e] > v && !(groups.UpGroup.upperBound[e] in groups.UpGroup.lowerBound)
+                deleteat!(n_UB, e-c)
+                c += 1
+
+                push!(changeUp.removed, groups.UpGroup.upperBound[e])
+                changed = true
+            end
+        end
+
+        if changed
+            nbChange += 1
+            changeVariable[nbChange] = groups.UpGroup
+        end
+
+        groups.UpGroup.upperBound = n_UB
+
+        cardSup = min(groups.UpGroup.cardinalSup, length(groups.DownGroup.upperBound))
+        changeUp.cardRemoved = cardSup - groups.UpGroup.cardinalSup
+
+        groups.UpGroup.cardinalSup += changeUp.cardRemoved
+    end
+
+    ####################################################################################
+
+    @assert groups.UpGroup.cardinalInf <= groups.UpGroup.cardinalSup "Infeasible Problem : $UpGroup has a problem"
+	@assert groups.DownGroup.cardinalInf <= groups.DownGroup.cardinalSup "Infeasible Problem : $DownGroup has a problem"
+
+    return changeVariable[1:nbChange], (changeUp, changeDown)
 end
 
 function quoi()
-    v1 = Variable("v1", [5,9], [2,5,9,11], 4, 4, Set([]), false)
-    v2 = Variable("v2", [7,10], [1,2,4,5,7,10], 4, 4, Set([]), false)
+    v1 = Variable("v1", [8,10,11], [3,6,8,9,10,11,13], 4, 4, Set([]), false)
+    v2 = Variable("v2", [7,14,16], [5,7,12,14,15,16], 4, 4, Set([]), false)
+    println(v1.upperBound)
     println(v2.upperBound)
-    filtrageGroups!(v1,v2)
+    model = ModelTest()
+    sg = SortGroups(v1,v2)
+    println(sg)
+    filtrageGroups!(sg)
+    println(v1.upperBound)
     println(v2.upperBound)
 end
