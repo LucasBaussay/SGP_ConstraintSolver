@@ -145,7 +145,7 @@ function ModelTest(p::Int = 12, g::Int = 4, w::Int = 1)
 
 	for indW1 in 1:(w-1)
 		for indW2 in (indW1+1):w
-			SortGroups(model, X[1, indW1], X[1, indW2])
+			SortWeeks(model, X[1, indW1], X[1, indW2])
 		end
 	end
 

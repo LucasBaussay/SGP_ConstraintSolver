@@ -137,8 +137,8 @@ function branch(model = ModelTest(); nbAppel::Int = 1, verbose::Bool = false, de
 
 				if value != nothing || varToTest.cardinalInf == length(varToTest.lowerBound)
 					if value == nothing || value in varToTest.upperBound
-						# println()
-						# println("On force $varToTest à $value")
+						#println()
+						#println("On force $varToTest à $value")
 
 						changeForce = forced!(varToTest, value, model)
 						# println("$varToTest : $(varToTest.lowerBound)")
@@ -148,8 +148,8 @@ function branch(model = ModelTest(); nbAppel::Int = 1, verbose::Bool = false, de
 
 						compteur.ind += 1
 						sol, stop = branch(model, nbAppel = nbAppel + 1, compteur = compteur, debug = debug)
-						# println()
-						# println("On déforce $varToTest pour $value")
+						#println()
+						#println("On déforce $varToTest pour $value")
 
 						# println("	"^(nbAppel-1), "Après")
 						# println("	"^(nbAppel-1), "lowerBound : ", varToTest.lowerBound)

@@ -41,7 +41,7 @@ function fix!(var::Variable, change::Change)
 		var.cardinalInf = var.cardinalSup
 	end
 
-	# println("On fixe $var")
+	#println("On fixe $var")
 
 	var.isFixed = true
 	change.fixed = true

@@ -155,10 +155,10 @@ function filtrage!(unionConst::DisjointUnion)
 		changes = (changeF, changeG, changeH)
 		for c in changes
 			if !(isempty(c.added))
-				# println("$unionConst ajoute $(c.added) à $(c.var)")
+				#println("$unionConst ajoute $(c.added) à $(c.var)")
 			end
 			if !(isempty(c.removed))
-				# println("$unionConst enlève $(c.removed) à $(c.var)")
+				#println("$unionConst enlève $(c.removed) à $(c.var)")
 			end
 		end
 

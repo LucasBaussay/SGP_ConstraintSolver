@@ -58,42 +58,43 @@ function filtrage!(groups::SortGroups)
     ####################################################################################
 
     #### filtering UpGroup
+    if length(groups.DownGroup.lowerBound) > 0 && length(groups.UpGroup.lowerBound) > 0
+        v = minimum(groups.DownGroup.lowerBound)
+        w = minimum(groups.UpGroup.lowerBound)
 
-    v = minimum(groups.DownGroup.lowerBound)
-    w = minimum(groups.UpGroup.lowerBound)
+        if !groups.UpGroup.isFixed && groups.UpGroup.cardinalSup - length(groups.UpGroup.lowerBound) == 1 && v < w # il ne reste plus qu'un élément à placer
 
-    if !groups.UpGroup.isFixed && groups.UpGroup.cardinalSup - length(groups.UpGroup.lowerBound) == 1 && v < w # il ne reste plus qu'un élément à placer
+            c = 0
+            n_UB = copy(groups.UpGroup.upperBound)
+            changed = false
+            for e in 1:length(groups.UpGroup.upperBound)
+                if groups.UpGroup.upperBound[e] > v && !(groups.UpGroup.upperBound[e] in groups.UpGroup.lowerBound)
+                    deleteat!(n_UB, e-c)
+                    c += 1
 
-        c = 0
-        n_UB = copy(groups.UpGroup.upperBound)
-        changed = false
-        for e in 1:length(groups.UpGroup.upperBound)
-            if groups.UpGroup.upperBound[e] > v && !(groups.UpGroup.upperBound[e] in groups.UpGroup.lowerBound)
-                deleteat!(n_UB, e-c)
-                c += 1
-
-                push!(changeUp.removed, groups.UpGroup.upperBound[e])
-                changed = true
+                    push!(changeUp.removed, groups.UpGroup.upperBound[e])
+                    changed = true
+                end
             end
+
+            if changed
+                nbChange += 1
+                changeVariable[nbChange] = groups.UpGroup
+            end
+
+            groups.UpGroup.upperBound = n_UB
+
+            cardSup = min(groups.UpGroup.cardinalSup, length(groups.DownGroup.upperBound))
+            changeUp.cardRemoved = cardSup - groups.UpGroup.cardinalSup
+
+            groups.UpGroup.cardinalSup += changeUp.cardRemoved
         end
-
-        if changed
-            nbChange += 1
-            changeVariable[nbChange] = groups.UpGroup
-        end
-
-        groups.UpGroup.upperBound = n_UB
-
-        cardSup = min(groups.UpGroup.cardinalSup, length(groups.DownGroup.upperBound))
-        changeUp.cardRemoved = cardSup - groups.UpGroup.cardinalSup
-
-        groups.UpGroup.cardinalSup += changeUp.cardRemoved
     end
 
     ####################################################################################
 
-    stop = groups.UpGroup.cardinalInf <= groups.UpGroup.cardinalSup
-	stop |= groups.DownGroup.cardinalInf <= groups.DownGroup.cardinalSup
+    stop = groups.UpGroup.cardinalInf > groups.UpGroup.cardinalSup
+	stop |= groups.DownGroup.cardinalInf > groups.DownGroup.cardinalSup
 
     return changeVariable[1:nbChange], (changeUp, changeDown), stop
 end

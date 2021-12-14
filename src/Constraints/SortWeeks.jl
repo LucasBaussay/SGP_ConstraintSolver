@@ -11,7 +11,7 @@ function SortWeeks(model, LeftGroup, RightGroup)
     push!(LeftGroup.linkedConstraint, constraint)
     push!(RightGroup.linkedConstraint, constraint)
 
-    push!(model.constraint, constraint)
+    push!(model.constraints, constraint)
 end
 
 function filtrage!(weeks::SortWeeks)
@@ -58,43 +58,44 @@ function filtrage!(weeks::SortWeeks)
     ##########################################################################################
 
     #### filtering RightGroup
+    if length(weeks.LeftGroup.lowerBound) >0 && length(weeks.RightGroup.lowerBound) > 0
+        v = maximum(weeks.LeftGroup.lowerBound)
+        w = maximum(weeks.RightGroup.lowerBound)
 
-    v = maximum(weeks.LeftGroup.lowerBound)
-    w = maximum(weeks.RightGroup.lowerBound)
+        if !weeks.RightGroup.isFixed && weeks.RightGroup.cardinalSup - length(weeks.RightGroup.lowerBound) == 1 && v > w
 
-    if !weeks.RightGroup.isFixed && weeks.RightGroup.cardinalSup - length(weeks.RightGroup.lowerBound) == 1 && v > w
+            c = 0
+            n_UB = copy(weeks.RightGroup.upperBound)
+            changed = false
+            for e in 1:length(weeks.RightGroup.upperBound)
+                if weeks.RightGroup.upperBound[e] < v && !(weeks.RightGroup.upperBound[e] in weeks.RightGroup.lowerBound)
+                    deleteat!(n_UB, e-c)
+                    c += 1
 
-        c = 0
-        n_UB = copy(weeks.RightGroup.upperBound)
-        changed = false
-        for e in 1:length(weeks.RightGroup.upperBound)
-            if weeks.RightGroup.upperBound[e] < v && !(weeks.RightGroup.upperBound[e] in weeks.RightGroup.lowerBound)
-                deleteat!(n_UB, e-c)
-                c += 1
-
-                push!(changeRight.removed, weeks.RightGroup.upperBound[e])
-                changed = true
+                    push!(changeRight.removed, weeks.RightGroup.upperBound[e])
+                    changed = true
+                end
             end
+
+            if changed
+                nbChange += 1
+                changeVariable[nbChange] = weeks.RightGroup
+            end
+
+            weeks.RightGroup.upperBound = n_UB
+
+            cardSup = min(weeks.RightGroup.cardinalSup, length(weeks.RightGroup.upperBound))
+            changeRight.cardRemoved = cardSup - weeks.RightGroup.cardinalSup
+
+            weeks.RightGroup.cardinalSup += changeRight.cardRemoved
         end
-
-        if changed
-            nbChange += 1
-            changeVariable[nbChange] = weeks.RightGroup
-        end
-
-        weeks.RightGroup.upperBound = n_UB
-
-        cardSup = min(weeks.RightGroup.cardinalSup, length(weeks.RightGroup.upperBound))
-        changeRight.cardRemoved = cardSup - weeks.RightGroup.cardinalSup
-
-        weeks.RightGroup.cardinalSup += changeRight.cardRemoved
     end
 
 
     ###################################################################################################
 
-    stop = weeks.LeftGroup.cardinalInf <= weeks.LeftGroup.cardinalSup
-	stop |= weeks.RightGroup.cardinalInf <= weeks.RightGroup.cardinalSup
+    stop = weeks.LeftGroup.cardinalInf > weeks.LeftGroup.cardinalSup
+	stop |= weeks.RightGroup.cardinalInf > weeks.RightGroup.cardinalSup
 
     return changeVariable[1:nbChange], (changeLeft, changeRight), stop
 end
