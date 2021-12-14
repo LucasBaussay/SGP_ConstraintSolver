@@ -86,7 +86,7 @@ end
 # Je doids gérer le cas d'erreur -> SI on tombre sur une solution non faisable ca fait quoi
 # Faire les fonctions unforced, returnParent, Solution(model)
 
-function branch(model = ModelTest(); nbAppel::Int = 1, verbose::Bool = false, debug::Real = Inf, compteur::Compteur = Compteur(0))
+function branch(model = ModelTest();setOfConstraint::Union{Nothing, Set{Constraint}} = nothing, nbAppel::Int = 1, verbose::Bool = false, debug::Real = Inf, compteur::Compteur = Compteur(0))
 
 
 	# println("N° : ", compteur.ind)
@@ -147,7 +147,7 @@ function branch(model = ModelTest(); nbAppel::Int = 1, verbose::Bool = false, de
 						# println("	"^(nbAppel-1), "upperBound : ", varToTest.upperBound)
 
 						compteur.ind += 1
-						sol, stop = branch(model, nbAppel = nbAppel + 1, compteur = compteur, debug = debug)
+						sol, stop = branch(model, setOfConstraint = copy(varToTest.linkedConstraint), nbAppel = nbAppel + 1, compteur = compteur, debug = debug)
 						#println()
 						#println("On déforce $varToTest pour $value")
 
