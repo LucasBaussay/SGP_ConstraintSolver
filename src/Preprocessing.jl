@@ -2,7 +2,7 @@ include("main.jl")
 
 function preprocessing(model::Model)
 
-    ## Fixing 1st week
+    ## Fixing all groups of 1st week
 
     q = model.p ÷ model.g
 
@@ -13,9 +13,8 @@ function preprocessing(model::Model)
         end
         model.X[i,1].upperBound = sol
         model.X[i,1].lowerBound = sol
+        model.X[i,1].isFixed = true
     end
-
-    ## model.X[i,1].isFixed = true (??)
 
     ## Fixing 1st element of first q groups (or g if g < q, but the problem is infeasible when w > 1)
 
