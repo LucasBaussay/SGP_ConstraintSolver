@@ -1,13 +1,9 @@
-include("../Constraint.jl")
-
 struct SortWeeks <: Constraint
 
     LeftGroup::Variable
     RightGroup::Variable
 
 end
-
-isFiltrable(::SortWeeks) = false
 
 function SortWeeks(model, LeftGroup, RightGroup)
     constraint = SortWeeks(LeftGroup, RightGroup)
@@ -18,7 +14,7 @@ function SortWeeks(model, LeftGroup, RightGroup)
     push!(model.constraint, constraint)
 end
 
-function filtrageWeeks!(weeks::SortWeeks)
+function filtrage!(weeks::SortWeeks)
 
     changeVariable = Vector{Variable}(undef,3)
     nbChange = 0
@@ -97,10 +93,10 @@ function filtrageWeeks!(weeks::SortWeeks)
 
     ###################################################################################################
 
-    @assert weeks.LeftGroup.cardinalInf <= weeks.LeftGroup.cardinalSup "Infeasible Problem : $LeftGroup has a problem"
-	@assert weeks.RightGroup.cardinalInf <= weeks.RightGroup.cardinalSup "Infeasible Problem : $RightGroup has a problem"
+    stop = weeks.LeftGroup.cardinalInf <= weeks.LeftGroup.cardinalSup
+	stop |= weeks.RightGroup.cardinalInf <= weeks.RightGroup.cardinalSup
 
-    return changeVariable[1:nbChange], (changeLeft, changeRight)
+    return changeVariable[1:nbChange], (changeLeft, changeRight), stop
 end
 
 function quoi()
@@ -111,7 +107,7 @@ function quoi()
     model = ModelTest()
     sg = SortWeeks(v1,v2)
     println(sg)
-    filtrageWeeks!(sg)
+    filtrage!(sg)
     println(v1.upperBound)
     println(v2.upperBound)
 end

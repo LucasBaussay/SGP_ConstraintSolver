@@ -57,6 +57,7 @@ function Base.show(io::IO, model::Model)
 					w = 1
 					g += 1
 				end
+				ind += 1
 			end
 		end
 		println(io, "      ", "...")
@@ -82,10 +83,10 @@ end
 
 #dict{Variable, Set{Constraint}}
 
-function returnParent!(changes::Dict{Variable, Change})
+function returnParent!(changes::Dict{Variable, Change}, model::Model)
 
 	for var in keys(changes)
-		unforced!(var, changes[var])
+		unforced!(var, changes[var], model)
 	end
 	nothing
 end
@@ -131,6 +132,20 @@ function ModelTest(p::Int = 12, g::Int = 4, w::Int = 1)
 					Social(model, X[indG1, indW1], X[indG2, indW2])
 				end
 			end
+		end
+	end
+
+	for indW in 1:w
+		for indG1 in 1:(g-1)
+			for indG2 in (indG1+1):g
+				SortGroups(model, X[indG1, indW], X[indG2, indW])
+			end
+		end
+	end
+
+	for indW1 in 1:(w-1)
+		for indW2 in (indW1+1):w
+			SortGroups(model, X[1, indW1], X[1, indW2])
 		end
 	end
 
