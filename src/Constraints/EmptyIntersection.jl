@@ -99,10 +99,10 @@ function filtrage!(inter::EmptyIntersection)
 		changes = (changeG, changeH)
 		for c in changes
 			if !(isempty(c.added))
-				println("$inter ajoute $(c.added) à $(c.var)")
+				# println("$inter ajoute $(c.added) à $(c.var)")
 			end
 			if !(isempty(c.removed))
-				println("$inter enlève $(c.removed) à $(c.var)")
+				# println("$inter enlève $(c.removed) à $(c.var)")
 			end
 		end
 

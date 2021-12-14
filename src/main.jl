@@ -6,27 +6,10 @@ include("Change.jl")
 
 include("Model.jl")
 
+include("Preprocessing.jl")
+
 mutable struct Compteur
 	ind::Int
-end
-
-function getFiltrableModel(model::Model)
-
-	setOfConstraint = Set{Constraint}()
-
-	for constr in model.constraints
-		if isFiltrable(constr)
-			if isRewritable(constr)
-				push!(setOfConstraint, rewrite(constr))
-			else
-				push!(setOfConstraint, constr)
-			end
-		else
-			error("The constraint $(typeof(constr)) is not handled") #Bof on s'en fout
-		end
-	end
-
-	return setOfConstraint
 end
 
 function Arc_Consistency(model::Model, setOfConstraint::Union{Set{Constraint}, Nothing} = nothing; verbose::Bool = false)
@@ -98,12 +81,6 @@ function Arc_Consistency(model::Model, setOfConstraint::Union{Set{Constraint}, N
 	return dictChanges, stop
 end
 
-function main(p::Int = 12, g::Int = 4, w::Int = 1; verbose::Bool = false)
-
-	model = ModelTest(p, g, w)
-
-end
-
 #TODO
 #
 # Je doids gérer le cas d'erreur -> SI on tombre sur une solution non faisable ca fait quoi
@@ -112,7 +89,7 @@ end
 function branch(model = ModelTest(); nbAppel::Int = 1, verbose::Bool = false, debug::Real = Inf, compteur::Compteur = Compteur(0))
 
 
-	println("N° : ", compteur.ind)
+	# println("N° : ", compteur.ind)
 	filter!(var-> !(var.isFixed), model.varsNotFixed)
 
 	changes = Dict{Variable, Change}()
@@ -125,7 +102,7 @@ function branch(model = ModelTest(); nbAppel::Int = 1, verbose::Bool = false, de
 	@assert compteur.ind <= debug "Mwahahaahahahahhahahahaha"
 
 
-		println("Profondeur : $nbAppel")
+		# println("Profondeur : $nbAppel")
 
 		mini = Inf
 		varToTest = nothing
@@ -160,19 +137,19 @@ function branch(model = ModelTest(); nbAppel::Int = 1, verbose::Bool = false, de
 
 				if value != nothing || varToTest.cardinalInf == length(varToTest.lowerBound)
 					if value == nothing || value in varToTest.upperBound
-						println()
-						println("On force $varToTest à $value")
+						# println()
+						# println("On force $varToTest à $value")
 
 						changeForce = forced!(varToTest, value, model)
-						println("$varToTest : $(varToTest.lowerBound)")
+						# println("$varToTest : $(varToTest.lowerBound)")
 
 						# println("	"^(nbAppel-1), "lowerBound : ", varToTest.lowerBound)
 						# println("	"^(nbAppel-1), "upperBound : ", varToTest.upperBound)
 
 						compteur.ind += 1
 						sol, stop = branch(model, nbAppel = nbAppel + 1, compteur = compteur, debug = debug)
-						println()
-						println("On déforce $varToTest pour $value")
+						# println()
+						# println("On déforce $varToTest pour $value")
 
 						# println("	"^(nbAppel-1), "Après")
 						# println("	"^(nbAppel-1), "lowerBound : ", varToTest.lowerBound)
@@ -241,4 +218,13 @@ function debug(ind::Int)
 		println(y)
 	end
 	return model
+end
+
+function main(p = 4, g = 2, w = 2)
+	model = ModelTest(p, g, w)
+
+	preprocessing(model)
+	sol, stop = branch(model)
+
+	return sol, stop
 end

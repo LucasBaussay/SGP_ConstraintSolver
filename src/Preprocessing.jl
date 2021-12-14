@@ -1,5 +1,3 @@
-include("main.jl")
-
 function preprocessing(model::Model)
 
     ## Fixing 1st week
@@ -13,6 +11,7 @@ function preprocessing(model::Model)
         end
         model.X[i,1].upperBound = sol
         model.X[i,1].lowerBound = sol
+        fix!(model.X[i, 1], Change(model.X[i, 1]))
     end
 
     ## model.X[i,1].isFixed = true (??)

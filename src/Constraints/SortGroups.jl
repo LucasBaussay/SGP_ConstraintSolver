@@ -1,13 +1,9 @@
-include("../Constraint.jl")
-
 struct SortGroups <: Constraint
 
     UpGroup::Variable
     DownGroup::Variable
 
 end
-
-isFiltrable(::SortGroups) = false
 
 function SortGroups(model, UpGroup, DownGroup)
     constraint = SortGroups(UpGroup, DownGroup)
@@ -18,7 +14,7 @@ function SortGroups(model, UpGroup, DownGroup)
     push!(model.constraints, constraint)
 end
 
-function filtrageGroups!(groups::SortGroups)
+function filtrage!(groups::SortGroups)
 
     changeVariable = Vector{Variable}(undef, 3)
     nbChange = 0
@@ -96,10 +92,10 @@ function filtrageGroups!(groups::SortGroups)
 
     ####################################################################################
 
-    @assert groups.UpGroup.cardinalInf <= groups.UpGroup.cardinalSup "Infeasible Problem : $UpGroup has a problem"
-	@assert groups.DownGroup.cardinalInf <= groups.DownGroup.cardinalSup "Infeasible Problem : $DownGroup has a problem"
+    stop = groups.UpGroup.cardinalInf <= groups.UpGroup.cardinalSup
+	stop |= groups.DownGroup.cardinalInf <= groups.DownGroup.cardinalSup
 
-    return changeVariable[1:nbChange], (changeUp, changeDown)
+    return changeVariable[1:nbChange], (changeUp, changeDown), stop
 end
 
 function quoi()
@@ -110,7 +106,7 @@ function quoi()
     model = ModelTest()
     sg = SortGroups(v1,v2)
     println(sg)
-    filtrageGroups!(sg)
+    filtrage!(sg)
     println(v1.upperBound)
     println(v2.upperBound)
 end
